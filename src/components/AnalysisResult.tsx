@@ -9,7 +9,6 @@ import {
   Divider,
   Chip,
   Box,
-  Rating,
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import WorkIcon from '@mui/icons-material/Work';
