@@ -77,27 +77,35 @@ const fileToDataUrl = async (file: File): Promise<string> => {
  * @param output - The validated output from Genkit
  * @returns Formatted response object
  */
-const formatResponse = (output: z.infer<typeof SalaryAnalysisSchema>) => ({
-  estimatedSalary: `${output.estimatedSalary.toLocaleString()} SEK/month`,
-  details: {
-    experience: {
-      level: output.experience.level,
-      years: output.experience.years,
-      keySkills: output.experience.keySkills
-    },
-    analysis: {
-      demand: {
-        level: output.marketDemand.level,
-        reasons: output.marketDemand.reasons
+const formatResponse = (output: z.infer<typeof SalaryAnalysisSchema> | null) => {
+  if (!output) {
+    return {
+      error: "Failed to analyze the resume"
+    };
+  }
+
+  return {
+    estimatedSalary: `${output.estimatedSalary.toLocaleString()} SEK/month`,
+    details: {
+      experience: {
+        level: output.experience.level,
+        years: output.experience.years,
+        keySkills: output.experience.keySkills
       },
-      location: output.location,
-      industry: output.industry,
-      salaryFactors: output.salaryFactors,
-      considerations: output.considerations
-    }
-  },
-  confidenceScore: output.confidenceScore
-});
+      analysis: {
+        demand: {
+          level: output.marketDemand.level,
+          reasons: output.marketDemand.reasons
+        },
+        location: output.location,
+        industry: output.industry,
+        salaryFactors: output.salaryFactors,
+        considerations: output.considerations
+      }
+    },
+    confidenceScore: output.confidenceScore
+  };
+};
 
 /**
  * POST endpoint for resume analysis
@@ -141,7 +149,11 @@ Focus on current Swedish market conditions and ensure the salary is appropriate 
     });
 
     console.log('Analysis completed successfully for file:', file.name);
-    return NextResponse.json(formatResponse(output));
+    const response = formatResponse(output);
+    if ('error' in response) {
+      return NextResponse.json(response, { status: 500 });
+    }
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error in analyze route:', error);
@@ -149,12 +161,13 @@ Focus on current Swedish market conditions and ensure the salary is appropriate 
     // Handle specific error types
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid AI response format', details: error.errors },
+        { error: 'Invalid analysis format' },
         { status: 422 }
       );
     }
 
-    if (error.message.includes('GOOGLE_API_KEY')) {
+    // Handle API key configuration error
+    if (error instanceof Error && error.message.includes('GOOGLE_API_KEY')) {
       return NextResponse.json(
         { error: 'Service configuration error' },
         { status: 503 }
@@ -163,7 +176,7 @@ Focus on current Swedish market conditions and ensure the salary is appropriate 
 
     // Generic error response
     return NextResponse.json(
-      { error: 'Failed to analyze resume', details: error.message },
+      { error: 'Failed to analyze resume' },
       { status: 500 }
     );
   }
