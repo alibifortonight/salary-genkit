@@ -1,0 +1,199 @@
+.pdf-uploader {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  box-sizing: border-box;
+}
+
+.upload-section {
+  display: flex;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 4vw, 1.5rem);
+  flex-direction: row;
+}
+
+.file-input {
+  flex: 1;
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  color: #1a1a1a;
+}
+
+.upload-button {
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  white-space: nowrap;
+}
+
+.upload-button:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.upload-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc3545;
+  margin: clamp(0.5rem, 2vw, 0.75rem) 0;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  background-color: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.error-icon {
+  font-size: 1.2em;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: clamp(1rem, 4vw, 1.5rem) 0;
+  color: #1a1a1a;
+}
+
+.loading-container p {
+  margin: 0;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-input:disabled,
+.upload-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.analysis-results {
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+  padding: clamp(1.5rem, 4vw, 2rem);
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.salary-section {
+  text-align: center;
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  padding-bottom: clamp(1.5rem, 4vw, 2rem);
+  border-bottom: 1px solid #eee;
+}
+
+.salary-amount {
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: #2e7d32;
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.salary-period {
+  color: #1a1a1a;
+  margin: clamp(0.25rem, 1vw, 0.5rem) 0 clamp(0.75rem, 2vw, 1rem);
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+}
+
+.confidence-score {
+  color: #1a1a1a;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.explanation-section,
+.skills-section,
+.experience-section {
+  margin-bottom: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.explanation-section h3,
+.skills-section h3,
+.experience-section h3 {
+  color: #1a1a1a;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  font-size: clamp(1.1rem, 3vw, 1.2rem);
+}
+
+.explanation-section p,
+.experience-section p {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  line-height: 1.6;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.375rem, 1.5vw, 0.5rem);
+}
+
+.skill-tag {
+  background-color: #e8f0fe;
+  color: #0066cc;
+  padding: clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem);
+  border-radius: 16px;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.disclaimer {
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+  padding-top: clamp(1rem, 3vw, 1.5rem);
+  border-top: 1px solid #eee;
+  color: #1a1a1a;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  line-height: 1.5;
+}
+
+/* Media Queries */
+@media (max-width: 480px) {
+  .upload-section {
+    flex-direction: column;
+  }
+
+  .upload-button {
+    width: 100%;
+  }
+
+  .skills-list {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .skills-list {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  .skills-list {
+    justify-content: flex-start;
+  }
+}
