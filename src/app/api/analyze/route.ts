@@ -28,11 +28,21 @@ const SalaryAnalysisSchema = z.object({
   confidenceScore: z.number().min(0).max(1).describe("Confidence score of the estimation")
 });
 
-// Initialize Genkit with error handling
-const initializeGenkit = () => {
+// Skip initialization during build time
+const isServer = typeof window === 'undefined';
+const isBuildTime = process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build';
+
+// Initialize Genkit client
+const initGenkit = () => {
+  // Skip initialization during build time to avoid environment variable errors
+  if (!isServer || isBuildTime) {
+    return null;
+  }
+
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY environment variable is not set');
+    console.error('GOOGLE_API_KEY environment variable is not set');
+    return null;
   }
 
   return genkit({
@@ -41,7 +51,7 @@ const initializeGenkit = () => {
   });
 };
 
-const ai = initializeGenkit();
+const ai = initGenkit();
 
 /**
  * Validates the uploaded file
@@ -113,6 +123,13 @@ const formatResponse = (output: z.infer<typeof SalaryAnalysisSchema> | null) => 
  */
 export async function POST(req: Request) {
   try {
+    if (!ai) {
+      return NextResponse.json(
+        { error: 'Service is not properly configured' },
+        { status: 503 }
+      );
+    }
+
     // Parse form data
     const formData = await req.formData();
     const file = formData.get('file') as File;
