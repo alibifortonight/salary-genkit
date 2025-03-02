@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { genkit, z } from 'genkit/beta';
 import { gemini20Flash, googleAI } from '@genkit-ai/googleai';
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+import path from 'path';
 
 // Enable Firebase telemetry
+console.log('[Startup] Enabling Firebase telemetry...');
 enableFirebaseTelemetry();
+console.log('[Startup] Firebase telemetry enabled');
 
 // Constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -38,24 +41,38 @@ const isBuildTime = process.env.NODE_ENV === 'production' && process.env.NEXT_PH
 
 // Initialize Genkit client
 const initGenkit = () => {
+  console.log('[initGenkit] Starting Genkit initialization...');
+  console.log('[initGenkit] Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PHASE: process.env.NEXT_PHASE,
+    isServer,
+    isBuildTime
+  });
+
   // Skip initialization during build time to avoid environment variable errors
   if (!isServer || isBuildTime) {
+    console.log('[initGenkit] Skipping initialization - not server or build time');
     return null;
   }
 
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    console.error('GOOGLE_API_KEY environment variable is not set');
+    console.error('[initGenkit] GOOGLE_API_KEY environment variable is not set');
     return null;
   }
+  console.log('[initGenkit] GOOGLE_API_KEY is set');
 
-  return genkit({
+  console.log('[initGenkit] Creating Genkit instance...');
+  const instance = genkit({
     plugins: [googleAI({ apiKey })],
     model: gemini20Flash,
   });
+  console.log('[initGenkit] Genkit instance created successfully');
+  return instance;
 };
 
 const ai = initGenkit();
+console.log('[Startup] Genkit initialization result:', { initialized: !!ai });
 
 /**
  * Validates the uploaded file
@@ -126,78 +143,52 @@ const formatResponse = (output: z.infer<typeof SalaryAnalysisSchema> | null) => 
  * Accepts a PDF file and returns salary analysis for the Swedish job market
  */
 export async function POST(req: Request) {
+  console.log('[POST] Starting request processing...');
   try {
     if (!ai) {
+      console.error('[POST] Genkit client not initialized');
       return NextResponse.json(
         { error: 'Service is not properly configured' },
         { status: 503 }
       );
     }
 
-    // Parse form data
+    console.log('[POST] Parsing form data...');
     const formData = await req.formData();
     const file = formData.get('file') as File;
-
-    // Validate file
-    const validationError = validateFile(file);
-    if (validationError) {
-      return NextResponse.json(
-        { error: validationError },
-        { status: 400 }
-      );
-    }
-
-    // Convert file to data URL
-    const dataUrl = await fileToDataUrl(file);
-    console.log('Starting Genkit analysis for file:', file.name);
     
-    // Generate analysis
-    const { output } = await ai.generate({
-      prompt: [
-        { media: { url: dataUrl } },
-        { text: `Analyze this resume for the Swedish job market and provide:
-1. Monthly salary estimate in SEK based on experience and skills
-2. Experience level, years, and key technical skills
-3. Market demand analysis with specific reasons
-4. Location and industry context within Sweden
-5. Key salary factors and market considerations
-
-Focus on current Swedish market conditions and ensure the salary is appropriate for the Swedish job market.` }
-      ],
-      output: {
-        schema: SalaryAnalysisSchema
-      }
+    console.log('[POST] Validating file...', {
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type
     });
 
-    console.log('Analysis completed successfully for file:', file.name);
-    const response = formatResponse(output);
-    if ('error' in response) {
-      return NextResponse.json(response, { status: 500 });
+    const validationError = validateFile(file);
+    if (validationError) {
+      console.error('[POST] File validation failed:', validationError);
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
-    return NextResponse.json(response);
 
-  } catch (error) {
-    console.error('Error in analyze route:', error);
+    console.log('[POST] Converting file to data URL...');
+    const dataUrl = await fileToDataUrl(file);
+    console.log('[POST] File converted successfully');
+
+    console.log('[POST] Loading prompt...');
+    const prompt = ai.prompt(path.join(process.cwd(), 'src/prompts/salary-analysis.prompt'));
     
-    // Handle specific error types
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid analysis format' },
-        { status: 422 }
-      );
-    }
+    console.log('[POST] Sending request to Genkit...');
+    const { output } = await prompt({ pdfUrl: dataUrl });
 
-    // Handle API key configuration error
-    if (error instanceof Error && error.message.includes('GOOGLE_API_KEY')) {
-      return NextResponse.json(
-        { error: 'Service configuration error' },
-        { status: 503 }
-      );
-    }
+    console.log('[POST] Received response from Genkit');
+    console.log('[POST] Formatting response...');
+    const response = formatResponse(output);
+    console.log('[POST] Response formatted successfully:', { hasError: 'error' in response });
 
-    // Generic error response
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('[POST] Error processing request:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze resume' },
+      { error: 'An error occurred while processing your request' },
       { status: 500 }
     );
   }

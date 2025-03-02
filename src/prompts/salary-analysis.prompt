@@ -1,0 +1,31 @@
+---
+model: googleai/gemini-2.0-flash
+input:
+  schema:
+    pdfUrl: string
+output:
+  schema:
+    estimatedSalary: number, Monthly salary estimate in SEK based on the resume
+    experience:
+      level: enum(Junior, Mid-level, Senior), Experience level of the candidate
+      years: number, Total years of relevant experience
+      keySkills: string[], Key technical skills identified from the resume
+    marketDemand:
+      level: enum(Low, Medium, High), Current market demand level for this profile
+      reasons: string[], Specific reasons for the market demand assessment
+    location: string, Relevant location within Sweden
+    industry: string, Primary industry context
+    salaryFactors: string[], Key factors influencing the salary estimation
+    considerations: string[], Important market considerations
+    confidenceScore: number, Confidence score of the estimation between 0 and 1
+---
+Analyze this resume for the Swedish job market and provide:
+1. Monthly salary estimate in SEK based on experience and skills
+2. Experience level, years, and key technical skills
+3. Market demand analysis with specific reasons
+4. Location and industry context within Sweden
+5. Key salary factors and market considerations
+
+Focus on current Swedish market conditions and ensure the salary is appropriate for the Swedish job market.
+
+{{media url=pdfUrl}}
