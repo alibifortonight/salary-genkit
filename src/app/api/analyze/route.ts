@@ -41,22 +41,17 @@ type SalaryAnalysis = z.infer<typeof SalaryAnalysisSchema>;
 
 // Skip initialization during build time
 const isServer = typeof window === 'undefined';
-const isBuildTime = process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build';
-const isServePhase = process.env.NEXT_PHASE === 'phase-production-serve';
 
 // Initialize Genkit client
 const initGenkit = () => {
   console.log('[initGenkit] Starting Genkit initialization...');
   console.log('[initGenkit] Environment:', {
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PHASE: process.env.NEXT_PHASE,
-    isServer,
-    isBuildTime,
-    isServePhase
+    isServer
   });
 
-  // Only initialize during server runtime (not build time)
-  if (!isServer || !isServePhase) {
+  // Only initialize during server runtime
+  if (!isServer) {
     console.log('[initGenkit] Skipping initialization - not server runtime');
     return null;
   }
