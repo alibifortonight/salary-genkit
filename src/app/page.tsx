@@ -5,7 +5,7 @@ export default function Home() {
     <div className="grid grid-rows-[auto,1fr,auto] min-h-screen">
       <header className="bg-black text-white py-4 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold">SalaryGenkit</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">HireHero</h1>
         </div>
       </header>
       
@@ -13,11 +13,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Resume Salary Analyzer
+              Predict Your Monthly Salary
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Upload your resume to get an AI-powered salary estimate based on your skills,
-              experience, and current market conditions in Sweden.
+              Join 10,000+ professionals harnessing AI insights to forecast your earning potential.
             </p>
           </div>
           <PdfUploader />
