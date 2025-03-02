@@ -19,7 +19,7 @@ appHosting:
           - RUNTIME
 
       - variable: NEXT_PHASE
-        value: phase-production-serve
+        value: phase-production-build
         availability:
           - BUILD
           - RUNTIME
