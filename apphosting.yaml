@@ -21,6 +21,7 @@ appHosting:
       - variable: NEXT_PHASE
         value: phase-production-serve
         availability:
+          - BUILD
           - RUNTIME
 
       - variable: GOOGLE_API_KEY
@@ -28,7 +29,4 @@ appHosting:
         availability:
           - RUNTIME
 
-      - variable: GOOGLE_CLOUD_PROJECT
-        value: salary-genkit
-        availability:
-          - RUNTIME
+  
