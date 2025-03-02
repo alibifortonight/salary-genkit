@@ -4,12 +4,28 @@ appHosting:
   run:
     serviceId: salary-genkit
     region: us-central1
-    minInstances: 0
+    runConfig:
+      cpu: 1
+      memoryMiB: 1024
+      maxInstances: 10
+      minInstances: 0
+      concurrency: 80
     env:
       # Runtime environment variables
-      - key: GOOGLE_API_KEY
-        secret: GOOGLE_API_KEY
-      - key: NODE_ENV
+      - variable: NODE_ENV
         value: production
-      - key: NEXT_PHASE
-        value: phase-production-serve
+        availability:
+          - BUILD
+          - RUNTIME
+      - variable: NEXT_PHASE
+        value: production
+        availability:
+          - BUILD
+          - RUNTIME
+      - variable: GOOGLE_API_KEY
+        secret: salary_genkit_google_api_key
+        availability:
+          - RUNTIME
+env:
+  - variable: SALARY_GENKIT_GOOGLE_API_KEY
+    secret: salary_genkit_google_api_key
