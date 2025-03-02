@@ -12,28 +12,32 @@ console.log('[Startup] Firebase telemetry enabled');
 // Constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = ['application/pdf'];
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
-/**
- * Schema for salary analysis response from Genkit
- * Defines the structure and validation rules for the AI's output
- */
+// Type definitions for the response
+const ExperienceLevelEnum = z.enum(['Junior', 'Mid-level', 'Senior']);
+const MarketDemandEnum = z.enum(['Low', 'Medium', 'High']);
+
 const SalaryAnalysisSchema = z.object({
-  estimatedSalary: z.number().describe("Estimated monthly salary in SEK based on the resume"),
+  estimatedSalary: z.number(),
   experience: z.object({
-    level: z.enum(["Junior", "Mid-level", "Senior"]).describe("Experience level of the candidate"),
-    years: z.number().describe("Total years of relevant experience"),
-    keySkills: z.array(z.string()).describe("Key technical skills identified from the resume")
+    level: ExperienceLevelEnum,
+    years: z.number(),
+    keySkills: z.array(z.string())
   }),
   marketDemand: z.object({
-    level: z.enum(["Low", "Medium", "High"]).describe("Current market demand level for this profile"),
-    reasons: z.array(z.string()).describe("Specific reasons for the market demand assessment")
+    level: MarketDemandEnum,
+    reasons: z.array(z.string())
   }),
-  location: z.string().describe("Relevant location within Sweden"),
-  industry: z.string().describe("Primary industry context"),
-  salaryFactors: z.array(z.string()).describe("Key factors influencing the salary estimation"),
-  considerations: z.array(z.string()).describe("Important market considerations"),
-  confidenceScore: z.number().min(0).max(1).describe("Confidence score of the estimation")
+  location: z.string(),
+  industry: z.string(),
+  salaryFactors: z.array(z.string()),
+  considerations: z.array(z.string()),
+  confidenceScore: z.number()
 });
+
+type SalaryAnalysis = z.infer<typeof SalaryAnalysisSchema>;
 
 // Skip initialization during build time
 const isServer = typeof window === 'undefined';
@@ -103,39 +107,75 @@ const fileToDataUrl = async (file: File): Promise<string> => {
   return `data:${file.type};base64,${base64}`;
 };
 
-/**
- * Formats the AI output for frontend consumption
- * @param output - The validated output from Genkit
- * @returns Formatted response object
- */
-const formatResponse = (output: z.infer<typeof SalaryAnalysisSchema> | null) => {
-  if (!output) {
-    return {
-      error: "Failed to analyze the resume"
-    };
-  }
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  return {
-    estimatedSalary: `${output.estimatedSalary.toLocaleString()} SEK/month`,
-    details: {
+const generateWithRetry = async (ai: any, dataUrl: string, retries = MAX_RETRIES): Promise<any> => {
+  try {
+    console.log(`[generateWithRetry] Attempt ${MAX_RETRIES - retries + 1}/${MAX_RETRIES}`);
+    const { output } = await ai.generate({
+      model: gemini20Flash,
+      prompt: [
+        { media: { url: dataUrl } },
+        { text: `Analyze this resume for the Swedish job market and provide:
+1. Monthly salary estimate in SEK based on experience and skills
+2. Experience level, years, and key technical skills
+3. Market demand analysis with specific reasons
+4. Location and industry context within Sweden
+5. Key salary factors and market considerations
+
+Focus on current Swedish market conditions and ensure the salary is appropriate for the Swedish job market.` }
+      ],
+      output: {
+        schema: SalaryAnalysisSchema
+      }
+    });
+    return output;
+  } catch (error: any) {
+    console.error(`[generateWithRetry] Error:`, {
+      status: error.status,
+      message: error.message,
+      traceId: error.traceId
+    });
+
+    if (error.status === 503 && retries > 0) {
+      console.log(`[generateWithRetry] Retrying in ${RETRY_DELAY}ms...`);
+      await sleep(RETRY_DELAY);
+      return generateWithRetry(ai, dataUrl, retries - 1);
+    }
+    
+    throw error;
+  }
+};
+
+const formatResponse = (output: SalaryAnalysis) => {
+  try {
+    return {
+      salary: {
+        amount: output.estimatedSalary.toLocaleString('sv-SE'),
+        currency: 'SEK',
+        period: 'monthly'
+      },
       experience: {
         level: output.experience.level,
         years: output.experience.years,
-        keySkills: output.experience.keySkills
+        skills: output.experience.keySkills
+      },
+      market: {
+        demand: output.marketDemand.level,
+        reasons: output.marketDemand.reasons,
+        location: output.location,
+        industry: output.industry
       },
       analysis: {
-        demand: {
-          level: output.marketDemand.level,
-          reasons: output.marketDemand.reasons
-        },
-        location: output.location,
-        industry: output.industry,
-        salaryFactors: output.salaryFactors,
-        considerations: output.considerations
+        factors: output.salaryFactors,
+        considerations: output.considerations,
+        confidence: output.confidenceScore
       }
-    },
-    confidenceScore: output.confidenceScore
-  };
+    };
+  } catch (error) {
+    console.error('[formatResponse] Error formatting response:', error);
+    return { error: 'Error formatting the analysis results' };
+  }
 };
 
 /**
@@ -173,23 +213,27 @@ export async function POST(req: Request) {
     const dataUrl = await fileToDataUrl(file);
     console.log('[POST] File converted successfully');
 
-    console.log('[POST] Loading prompt...');
-    const prompt = ai.prompt(path.join(process.cwd(), 'src/prompts/salary-analysis.prompt'));
-    
-    console.log('[POST] Sending request to Genkit...');
-    const { output } = await prompt({ pdfUrl: dataUrl });
+    console.log('[POST] Creating prompt...');
+    const output = await generateWithRetry(ai, dataUrl);
 
-    console.log('[POST] Received response from Genkit');
+    console.log('[POST] Received response from Genkit:', JSON.stringify(output, null, 2));
     console.log('[POST] Formatting response...');
     const response = formatResponse(output);
-    console.log('[POST] Response formatted successfully:', { hasError: 'error' in response });
+    console.log('[POST] Response formatted successfully:', JSON.stringify(response, null, 2));
 
     return NextResponse.json(response);
-  } catch (error) {
-    console.error('[POST] Error processing request:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('[POST] Error processing request:', {
+      status: error.status,
+      message: error.message,
+      traceId: error.traceId
+    });
+    
+    const statusCode = error.status || 500;
+    const errorMessage = statusCode === 503 
+      ? 'The service is temporarily unavailable. Please try again in a few moments.'
+      : 'An error occurred while processing your request';
+    
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 }

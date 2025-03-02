@@ -1,175 +1,197 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from '@/styles/PdfUploader.module.css';
 import { CircularProgress } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-interface AnalysisResult {
-  estimatedSalary: string;
-  details: {
-    experience: {
-      level: string;
-      years: number;
-      keySkills: string[];
-    };
-    analysis: {
-      demand: {
-        level: string;
-        reasons: string[];
-      };
-      location: string;
-      industry: string;
-      salaryFactors: string[];
-      considerations: string[];
-    };
+interface SalaryAnalysisResponse {
+  salary: {
+    amount: string;
+    currency: string;
+    period: string;
   };
-  confidenceScore: number;
+  experience: {
+    level: string;
+    years: number;
+    skills: string[];
+  };
+  market: {
+    demand: string;
+    reasons: string[];
+    location: string;
+    industry: string;
+  };
+  analysis: {
+    factors: string[];
+    considerations: string[];
+    confidence: number;
+  };
+  error?: string;
 }
 
 export default function PdfUploader() {
-  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<SalaryAnalysisResponse | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    setError(null);
-    setResult(null);
-
-    if (!selectedFile) {
-      return;
+    if (selectedFile) {
+      analyzeResume(selectedFile);
     }
-
-    if (selectedFile.type !== 'application/pdf') {
-      setError('Please upload a PDF file');
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size should be less than 10MB');
-      return;
-    }
-
-    setFile(selectedFile);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
-
+  const analyzeResume = async (file: File) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze resume');
+        throw new Error(data.error || 'Failed to analyze resume');
       }
 
-      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      analyzeResume(file);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
   return (
-    <div className={styles['pdf-uploader']}>
-      <div className={styles['upload-section']}>
+    <div className="w-full max-w-2xl mx-auto p-6">
+      <div
+        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+        onClick={() => fileInputRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         <input
           type="file"
-          accept=".pdf"
+          ref={fileInputRef}
           onChange={handleFileChange}
-          className={styles['file-input']}
-          disabled={loading}
+          accept=".pdf"
+          className="hidden"
         />
-        <button
-          onClick={handleUpload}
-          className={styles['upload-button']}
-          disabled={!file || loading}
-        >
-          {loading ? 'Analyzing...' : 'Analyze Resume'}
-        </button>
+        <CloudUploadIcon className="text-gray-400 text-5xl mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Upload Your Resume</h2>
+        <p className="text-gray-500">
+          Drag and drop your PDF resume here, or click to select
+        </p>
       </div>
 
-      {error && (
-        <div className={styles['error-message']}>
-          <ErrorOutlineIcon className={styles['error-icon']} />
-          {error}
-        </div>
-      )}
-
       {loading && (
-        <div className={styles['loading-container']}>
-          <CircularProgress size={40} />
-          <p>Analyzing your resume...</p>
+        <div className="mt-8 text-center">
+          <CircularProgress />
+          <p className="mt-4">Analyzing your resume...</p>
         </div>
       )}
 
-      {result && (
-        <div className={styles['analysis-results']}>
-          <div className={styles['salary-section']}>
-            <h2 className={styles['salary-amount']}>{result.estimatedSalary}</h2>
-            <p className={styles['salary-period']}>Estimated Monthly Salary</p>
-            <p className={styles['confidence-score']}>
-              Confidence Score: {(result.confidenceScore * 100).toFixed(1)}%
+      {error && (
+        <div className="mt-8 text-center text-red-600">
+          <ErrorOutlineIcon className="text-4xl mb-2" />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {result && !loading && !error && (
+        <div className="mt-8 space-y-6">
+          <div>
+            <h3>Estimated Salary</h3>
+            <p className="text-2xl font-bold">
+              {result.salary.amount} {result.salary.currency}/{result.salary.period}
             </p>
           </div>
 
-          <div className={styles['experience-section']}>
+          <div>
             <h3>Experience Level</h3>
             <p>
-              {result.details.experience.level} ({result.details.experience.years}{' '}
-              years of experience)
+              {result.experience.level} ({result.experience.years} years of experience)
             </p>
-          </div>
-
-          <div className={styles['skills-section']}>
-            <h3>Key Skills</h3>
-            <div className={styles['skills-list']}>
-              {result.details.experience.keySkills.map((skill, index) => (
-                <span key={index} className={styles['skill-tag']}>
-                  {skill}
-                </span>
-              ))}
+            <div className="mt-2">
+              <h4>Key Skills</h4>
+              <ul className="list-disc list-inside">
+                {result.experience.skills.map((skill, index) => (
+                  <li key={index}>{skill}</li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          <div className={styles['explanation-section']}>
+          <div>
             <h3>Market Analysis</h3>
             <p>
-              Market Demand: <strong>{result.details.analysis.demand.level}</strong>
+              <strong>Demand:</strong> {result.market.demand}
             </p>
-            <p>Location: {result.details.analysis.location}</p>
-            <p>Industry: {result.details.analysis.industry}</p>
+            <div className="mt-2">
+              <h4>Reasons</h4>
+              <ul className="list-disc list-inside">
+                {result.market.reasons.map((reason, index) => (
+                  <li key={index}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+            <p className="mt-2">
+              <strong>Location:</strong> {result.market.location}
+            </p>
+            <p>
+              <strong>Industry:</strong> {result.market.industry}
+            </p>
           </div>
 
-          <div className={styles['explanation-section']}>
-            <h3>Demand Factors</h3>
-            <ul>
-              {result.details.analysis.demand.reasons.map((reason, index) => (
-                <li key={index}>{reason}</li>
-              ))}
-            </ul>
+          <div>
+            <h3>Additional Analysis</h3>
+            <div>
+              <h4>Salary Factors</h4>
+              <ul className="list-disc list-inside">
+                {result.analysis.factors.map((factor, index) => (
+                  <li key={index}>{factor}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-2">
+              <h4>Market Considerations</h4>
+              <ul className="list-disc list-inside">
+                {result.analysis.considerations.map((consideration, index) => (
+                  <li key={index}>{consideration}</li>
+                ))}
+              </ul>
+            </div>
+            <p className="mt-2">
+              <strong>Confidence Score:</strong>{' '}
+              {(result.analysis.confidence * 100).toFixed(1)}%
+            </p>
           </div>
-
-          <p className={styles.disclaimer}>
-            Note: This salary estimate is based on current market conditions and the
-            information provided in your resume. Actual salaries may vary based on
-            specific company policies, location, and other factors.
-          </p>
         </div>
       )}
     </div>
