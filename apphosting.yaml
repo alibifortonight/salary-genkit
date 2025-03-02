@@ -25,12 +25,12 @@ appHosting:
           - RUNTIME
 
       - variable: GOOGLE_CLOUD_PROJECT
-        value: salary-genkit
+        value: salary-genkit-718764042014
         availability:
           - BUILD
           - RUNTIME
 
       - variable: GOOGLE_API_KEY
-        secret: salary_genkit_google_api_key
+        secret: GOOGLE_API_KEY
         availability:
           - RUNTIME
