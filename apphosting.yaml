@@ -10,22 +10,7 @@ appHosting:
       maxInstances: 10
       minInstances: 0
       concurrency: 80
-    env:
-      # Runtime environment variables
-      - variable: NODE_ENV
-        value: production
-        availability:
-          - BUILD
-          - RUNTIME
-      - variable: NEXT_PHASE
-        value: production
-        availability:
-          - BUILD
-          - RUNTIME
-      - variable: GOOGLE_API_KEY
-        secret: salary_genkit_google_api_key
-        availability:
-          - RUNTIME
-env:
-  - variable: SALARY_GENKIT_GOOGLE_API_KEY
-    secret: salary_genkit_google_api_key
+    
+  env:
+    - variable: SALARY_GENKIT_GOOGLE_API_KEY
+      secret: salary_genkit_google_api_key
