@@ -15,57 +15,49 @@ import WorkIcon from '@mui/icons-material/Work';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BusinessIcon from '@mui/icons-material/Business';
 
-interface AnalysisResultProps {
-  result: {
-    estimatedSalary: string;
-    details: {
-      experience: {
-        years: number;
-        level: string;
-        keySkills: string[];
-      };
-      analysis: {
-        salaryFactors: string[];
-        considerations: string[];
-        location: string;
-        industry: string;
-        demand?: {
-          level: 'Low' | 'Medium' | 'High';
-          reasons: string[];
-        };
-      };
-    };
+interface SalaryAnalysisResponse {
+  salary: {
+    amount: string;
+    currency: string;
+    period: string;
+  };
+  experience: {
+    level: string;
+    years: number;
+    skills: string[];
+  };
+  market: {
+    demand: string;
+    reasons: string[];
+    location: string;
+    industry: string;
+  };
+  analysis: {
+    factors: string[];
+    considerations: string[];
+    confidence: number;
   };
 }
 
-const DemandLevel = ({ demand }: { demand: { level: string, reasons: string[] } }) => {
+const DemandLevel = ({ level, reasons }: { level: string; reasons: string[] }) => {
   const color = {
     'High': 'success',
     'Medium': 'warning',
     'Low': 'error'
-  }[demand.level] || 'default';
+  }[level] || 'default';
 
   return (
     <Box>
       <Chip
         icon={<TrendingUpIcon />}
-        label={`Demand: ${demand.level}`}
+        label={`Market Demand: ${level}`}
         color={color as any}
-        variant="outlined"
-        size="small"
-        sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+        sx={{ mb: 1 }}
       />
-      <List dense sx={{ mt: 1, pl: 2 }}>
-        {demand.reasons.map((reason, index) => (
-          <ListItem key={index} sx={{ py: 0.5 }}>
-            <ListItemText 
-              primary={reason}
-              sx={{ 
-                '& .MuiListItemText-primary': { 
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' } 
-                }
-              }}
-            />
+      <List dense>
+        {reasons.map((reason, index) => (
+          <ListItem key={index}>
+            <ListItemText primary={reason} />
           </ListItem>
         ))}
       </List>
@@ -73,118 +65,88 @@ const DemandLevel = ({ demand }: { demand: { level: string, reasons: string[] } 
   );
 };
 
-export default function AnalysisResult({ result }: AnalysisResultProps) {
-  console.log('AnalysisResult received:', JSON.stringify(result, null, 2));
-  
-  if (!result) {
-    console.log('Result is null or undefined');
-    return null;
-  }
-  
+export default function AnalysisResult({ result }: { result: SalaryAnalysisResponse }) {
   return (
-    <Card variant="outlined" sx={{ mt: 3, maxWidth: 800, mx: 'auto', width: '100%', bgcolor: 'background.paper' }}>
-      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography variant="h5" gutterBottom color="primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-          Salary Analysis Results
-        </Typography>
-
-        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" color="primary" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Estimated Salary Range
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+      <Card elevation={3}>
+        <CardContent>
+          <Typography variant="h4" component="h2" gutterBottom>
+            {result.salary.amount} {result.salary.currency}/{result.salary.period}
           </Typography>
-          <Typography variant="h4" color="secondary" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' } }}>
-            {result.estimatedSalary}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 2 }}>
-            <Chip
-              icon={<LocationOnIcon />}
-              label={result.details.analysis.location}
-              variant="outlined"
-              size="small"
-              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-            />
-            <Chip
-              icon={<BusinessIcon />}
-              label={result.details.analysis.industry}
-              variant="outlined"
-              size="small"
-              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-            />
-            {result.details.analysis.demand && (
-              <DemandLevel demand={result.details.analysis.demand} />
-            )}
-          </Box>
-        </Box>
 
-        <Divider sx={{ my: { xs: 2, sm: 3 } }} />
+          <Divider sx={{ my: 2 }} />
 
-        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Experience Profile
+          <Typography variant="h6" gutterBottom>
+            <WorkIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Experience
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <WorkIcon sx={{ mr: 1, fontSize: { xs: '1.25rem', sm: '1.5rem' } }} color="action" />
-            <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-              {result.details.experience.years} years of experience ({result.details.experience.level} level)
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-            {result.details.experience.keySkills.map((skill, index) => (
-              <Chip 
-                key={index} 
-                label={skill} 
-                size="small"
-                sx={{ 
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  height: { xs: '24px', sm: '32px' }
-                }}
+          <Typography variant="body1" paragraph>
+            {result.experience.level} ({result.experience.years} years)
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            {result.experience.skills.map((skill, index) => (
+              <Chip
+                key={index}
+                label={skill}
+                sx={{ mr: 1, mb: 1 }}
+                variant="outlined"
               />
             ))}
           </Box>
-        </Box>
 
-        <Divider sx={{ my: { xs: 2, sm: 3 } }} />
+          <Divider sx={{ my: 2 }} />
 
-        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Salary Factors
+          <Typography variant="h6" gutterBottom>
+            <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Market Analysis
           </Typography>
-          <List dense sx={{ py: 0 }}>
-            {result.details.analysis.salaryFactors.map((factor, index) => (
-              <ListItem key={index} sx={{ px: { xs: 1, sm: 2 }, py: { xs: 0.5, sm: 1 } }}>
-                <ListItemText 
-                  primary={factor} 
-                  sx={{ 
-                    '& .MuiListItemText-primary': { 
-                      fontSize: { xs: '0.875rem', sm: '1rem' } 
-                    }
-                  }}
-                />
+          <DemandLevel level={result.market.demand} reasons={result.market.reasons} />
+
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body1">
+              <LocationOnIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+              {result.market.location}
+            </Typography>
+            <Typography variant="body1">
+              <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+              {result.market.industry}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Analysis Details
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Key Factors
+          </Typography>
+          <List dense>
+            {result.analysis.factors.map((factor, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={factor} />
               </ListItem>
             ))}
           </List>
-        </Box>
 
-        <Box>
-          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Key Considerations
+          <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+            Market Considerations
           </Typography>
-          <List dense sx={{ py: 0 }}>
-            {result.details.analysis.considerations.map((consideration, index) => (
-              <ListItem key={index} sx={{ px: { xs: 1, sm: 2 }, py: { xs: 0.5, sm: 1 } }}>
-                <ListItemText 
-                  primary={consideration}
-                  sx={{ 
-                    '& .MuiListItemText-primary': { 
-                      fontSize: { xs: '0.875rem', sm: '1rem' } 
-                    }
-                  }}
-                />
+          <List dense>
+            {result.analysis.considerations.map((consideration, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={consideration} />
               </ListItem>
             ))}
           </List>
-        </Box>
-      </CardContent>
-    </Card>
+
+          <Box sx={{ mt: 2, textAlign: 'right' }}>
+            <Typography variant="body2" color="text.secondary">
+              Confidence Score: {(result.analysis.confidence * 100).toFixed(1)}%
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
