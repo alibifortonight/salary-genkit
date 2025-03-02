@@ -19,9 +19,8 @@ appHosting:
           - RUNTIME
 
       - variable: NEXT_PHASE
-        value: production
+        value: phase-production-serve
         availability:
-          - BUILD
           - RUNTIME
 
       - variable: GOOGLE_API_KEY
