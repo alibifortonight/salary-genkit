@@ -5,9 +5,11 @@ appHosting:
     serviceId: salary-genkit
     region: us-central1
     minInstances: 0
-
-  # Environment variables and secrets.
-  env:
-    # Runtime environment variables
-    - key: GOOGLE_API_KEY
-      secret: GOOGLE_API_KEY
+    env:
+      # Runtime environment variables
+      - key: GOOGLE_API_KEY
+        secret: GOOGLE_API_KEY
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PHASE
+        value: phase-production-serve
