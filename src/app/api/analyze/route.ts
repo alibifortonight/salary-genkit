@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { genkit, z } from 'genkit/beta';
 import { gemini20Flash, googleAI } from '@genkit-ai/googleai';
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+// Enable Firebase telemetry
+enableFirebaseTelemetry();
 
 // Constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
