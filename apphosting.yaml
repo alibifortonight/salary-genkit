@@ -31,7 +31,7 @@ appHosting:
           - RUNTIME
 
       - variable: GOOGLE_API_KEY
-        secret: GOOGLE_API_KEY
+        secret: salary_genkit_google_api_key
         availability:
           - RUNTIME
 
