@@ -7,7 +7,7 @@ enableFirebaseTelemetry();
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.GOOGLE_API_KEY,
+  apiKey: process.env.FIREBASE_API_KEY,
   projectId: 'salary-genkit',
   storageBucket: 'salary-genkit.appspot.com',
 };

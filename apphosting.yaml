@@ -34,3 +34,8 @@ appHosting:
         secret: GOOGLE_API_KEY
         availability:
           - RUNTIME
+
+      - variable: FIREBASE_API_KEY
+        secret: firebaseApiKey
+        availability:
+          - RUNTIME
