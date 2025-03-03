@@ -39,41 +39,29 @@ const SalaryAnalysisSchema = z.object({
 
 type SalaryAnalysis = z.infer<typeof SalaryAnalysisSchema>;
 
-// Skip initialization during build time
-const isServer = typeof window === 'undefined';
-
 // Initialize Genkit client
-const initGenkit = () => {
-  console.log('[initGenkit] Starting Genkit initialization...');
-  console.log('[initGenkit] Environment:', {
-    NODE_ENV: process.env.NODE_ENV,
-    isServer
-  });
+let ai: any = null;
 
-  // Only initialize during server runtime
-  if (!isServer) {
-    console.log('[initGenkit] Skipping initialization - not server runtime');
-    return null;
-  }
-
+// Initialize on module load
+if (typeof window === 'undefined') {
+  console.log('[Startup] Running server-side initialization...');
   const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    console.error('[initGenkit] GOOGLE_API_KEY environment variable is not set');
-    return null;
+  
+  if (apiKey) {
+    console.log('[Startup] Creating Genkit instance...');
+    try {
+      ai = genkit({
+        plugins: [googleAI({ apiKey })],
+        model: gemini20Flash,
+      });
+      console.log('[Startup] Genkit instance created successfully');
+    } catch (error) {
+      console.error('[Startup] Error creating Genkit instance:', error);
+    }
+  } else {
+    console.error('[Startup] GOOGLE_API_KEY environment variable is not set');
   }
-  console.log('[initGenkit] GOOGLE_API_KEY is set');
-
-  console.log('[initGenkit] Creating Genkit instance...');
-  const instance = genkit({
-    plugins: [googleAI({ apiKey })],
-    model: gemini20Flash,
-  });
-  console.log('[initGenkit] Genkit instance created successfully');
-  return instance;
-};
-
-const ai = initGenkit();
-console.log('[Startup] Genkit initialization result:', { initialized: !!ai });
+}
 
 /**
  * Validates the uploaded file
