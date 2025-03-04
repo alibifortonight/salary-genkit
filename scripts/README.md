@@ -35,10 +35,29 @@ The application requires a Google API Key to function properly. This key is used
 
    You should see `salary_genkit_google_api_key` in the list.
 
-6. Deploy the application:
+6. Run the check-permissions.sh script to ensure the service account has the necessary permissions:
+   ```bash
+   ./scripts/check-permissions.sh
+   ```
+
+7. Deploy the application:
    ```bash
    firebase deploy
    ```
+
+## Checking and Fixing Permissions
+
+If you encounter issues with the application not being able to access the secrets, you can use the check-permissions.sh script to verify and fix the IAM permissions:
+
+```bash
+./scripts/check-permissions.sh
+```
+
+This script will:
+1. Check if the service account used by Cloud Run has the Secret Manager Secret Accessor role
+2. Add the role if it's missing
+3. Check if the service account has access to the specific secret
+4. Add the necessary permissions if they're missing
 
 ## Troubleshooting
 
@@ -58,7 +77,17 @@ If you encounter any issues with the API key not being available in the deployed
        - RUNTIME
    ```
 
-3. Redeploy the application after making any changes:
+3. Check the IAM permissions using the check-permissions.sh script:
+   ```bash
+   ./scripts/check-permissions.sh
+   ```
+
+4. Check the logs for any errors:
+   ```bash
+   gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=salary-genkit" --limit=50
+   ```
+
+5. Redeploy the application after making any changes:
    ```bash
    firebase deploy
    ```
