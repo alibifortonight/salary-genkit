@@ -1,9 +1,6 @@
-import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
-import { initializeApp } from 'firebase/app';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
 import { getStorage } from 'firebase/storage';
-
-// Initialize Firebase telemetry
-enableFirebaseTelemetry();
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -12,11 +9,9 @@ const firebaseConfig = {
   projectId: "salary-genkit",
   storageBucket: "salary-genkit.appspot.com",
   messagingSenderId: "718764042014",
-  appId: "1:718764042014:web:85b7811656964712ec4b0f",
-  measurementId: "G-6GY6L8X20L"
+  appId: "1:718764042014:web:e3e6c3d2b2b2b2b2b2b2b2"
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
-export default app;

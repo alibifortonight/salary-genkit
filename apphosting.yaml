@@ -18,6 +18,17 @@ appHosting:
           - BUILD
           - RUNTIME
 
+      - variable: GOOGLE_PROJECT_ID
+        value: salary-genkit
+        availability:
+          - BUILD
+          - RUNTIME
+
+      - variable: GOOGLE_API_KEY
+        secret: salary_genkit_google_api_key
+        availability:
+          - RUNTIME
+
       - variable: NEXT_PHASE
         value: phase-production-serve
         availability:
@@ -28,9 +39,4 @@ appHosting:
         value: salary-genkit-718764042014
         availability:
           - BUILD
-          - RUNTIME
-
-      - variable: GOOGLE_API_KEY
-        secret: salary_genkit_google_api_key
-        availability:
           - RUNTIME

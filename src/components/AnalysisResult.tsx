@@ -16,27 +16,21 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BusinessIcon from '@mui/icons-material/Business';
 
 interface SalaryAnalysisResponse {
-  salary: {
-    amount: string;
-    currency: string;
-    period: string;
-  };
+  estimatedSalary: number;
   experience: {
     level: string;
     years: number;
-    skills: string[];
+    keySkills: string[];
   };
-  market: {
-    demand: string;
+  marketDemand: {
+    level: string;
     reasons: string[];
-    location: string;
-    industry: string;
   };
-  analysis: {
-    factors: string[];
-    considerations: string[];
-    confidence: number;
-  };
+  location: string;
+  industry: string;
+  salaryFactors: string[];
+  considerations: string[];
+  confidenceScore: number;
 }
 
 const DemandLevel = ({ level, reasons }: { level: string; reasons: string[] }) => {
@@ -71,7 +65,7 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
       <Card elevation={3}>
         <CardContent>
           <Typography variant="h4" component="h2" gutterBottom>
-            {result.salary.amount} {result.salary.currency}/{result.salary.period}
+            {result.estimatedSalary.toLocaleString('sv-SE')} SEK/month
           </Typography>
 
           <Divider sx={{ my: 2 }} />
@@ -84,7 +78,7 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
             {result.experience.level} ({result.experience.years} years)
           </Typography>
           <Box sx={{ mb: 2 }}>
-            {result.experience.skills.map((skill, index) => (
+            {result.experience.keySkills.map((skill, index) => (
               <Chip
                 key={index}
                 label={skill}
@@ -100,16 +94,16 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
             <TrendingUpIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
             Market Analysis
           </Typography>
-          <DemandLevel level={result.market.demand} reasons={result.market.reasons} />
+          <DemandLevel level={result.marketDemand.level} reasons={result.marketDemand.reasons} />
 
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1">
               <LocationOnIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {result.market.location}
+              {result.location}
             </Typography>
             <Typography variant="body1">
               <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {result.market.industry}
+              {result.industry}
             </Typography>
           </Box>
 
@@ -122,7 +116,7 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
             Key Factors
           </Typography>
           <List dense>
-            {result.analysis.factors.map((factor, index) => (
+            {result.salaryFactors.map((factor, index) => (
               <ListItem key={index}>
                 <ListItemText primary={factor} />
               </ListItem>
@@ -133,7 +127,7 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
             Market Considerations
           </Typography>
           <List dense>
-            {result.analysis.considerations.map((consideration, index) => (
+            {result.considerations.map((consideration, index) => (
               <ListItem key={index}>
                 <ListItemText primary={consideration} />
               </ListItem>
@@ -142,7 +136,7 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysisRespo
 
           <Box sx={{ mt: 2, textAlign: 'right' }}>
             <Typography variant="body2" color="text.secondary">
-              Confidence Score: {(result.analysis.confidence * 100).toFixed(1)}%
+              Confidence Score: {(result.confidenceScore * 100).toFixed(1)}%
             </Typography>
           </Box>
         </CardContent>
