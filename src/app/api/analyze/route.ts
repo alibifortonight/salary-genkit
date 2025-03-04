@@ -36,6 +36,9 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 async function generateWithRetry(pdfContent: string, retries = 3): Promise<SalaryAnalysisResponse> {
   try {
+    if (!analyzeSalaryFlow) {
+      throw new Error('API service is not configured. Missing API key.');
+    }
     return await analyzeSalaryFlow({ pdfContent });
   } catch (error: any) {
     console.error('[generateWithRetry] Attempt failed:', error);

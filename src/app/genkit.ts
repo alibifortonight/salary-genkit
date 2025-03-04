@@ -9,17 +9,21 @@ const projectId = process.env.GOOGLE_PROJECT_ID || 'salary-genkit';
 console.log('[Startup] GOOGLE_API_KEY present:', !!apiKey);
 console.log('[Startup] GOOGLE_PROJECT_ID:', projectId);
 
-if (!apiKey) {
-  throw new Error('[Startup] GOOGLE_API_KEY environment variable is not set');
+// Only initialize the client if API key is available
+// This allows the app to build even if the API key is not available during build time
+let ai;
+if (apiKey) {
+  //  Note: We're not passing projectId to googleAI() as it's not supported in the type definition
+  ai = genkit({
+    plugins: [googleAI({ 
+      apiKey
+    })],
+    model: gemini20Flash,
+  });
+} else {
+  // During build time, we might not have the API key
+  console.warn('[Startup] Genkit client not initialized due to missing API key');
 }
-
-//  Note: We're not passing projectId to googleAI() as it's not supported in the type definition
-const ai = genkit({
-  plugins: [googleAI({ 
-    apiKey
-  })],
-  model: gemini20Flash,
-});
 
 // Type definitions for the response
 const ExperienceLevelEnum = z.enum(['Junior', 'Mid-level', 'Senior']);
@@ -80,7 +84,7 @@ Base your analysis on:
 4. Industry standards
 5. Location within Sweden`;
 
-export const analyzeSalaryFlow = ai.defineFlow(
+export const analyzeSalaryFlow = ai?.defineFlow(
   {
     name: "analyzeSalaryFlow",
     inputSchema: z.object({
@@ -89,7 +93,7 @@ export const analyzeSalaryFlow = ai.defineFlow(
     outputSchema: SalaryAnalysisSchema,
   },
   async ({ pdfContent }) => {
-    const { text } = await ai.generate([
+    const { text } = await ai?.generate([
       { media: { url: pdfContent } },
       { text: ANALYSIS_PROMPT }
     ]);
