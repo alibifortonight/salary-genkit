@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeSalaryFlow } from '../../genkit';
-import { ErrorResponse, SalaryAnalysisResponse } from '@/types/api';
+import { analyzeSalary } from '@/app/genkit';
+import { SalaryAnalysis } from '@/app/genkit';
+import { ErrorResponse } from '@/types/api';
+
+export interface SalaryAnalysisResponse extends SalaryAnalysis {
+  error?: string;
+}
 
 /**
  * Validates the uploaded file
@@ -32,24 +37,38 @@ async function fileToDataUrl(file: File): Promise<string> {
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Generate with retry logic
+ * Attempts to generate an analysis with retries
  */
 async function generateWithRetry(pdfContent: string, retries = 3): Promise<SalaryAnalysisResponse> {
   try {
-    if (!analyzeSalaryFlow) {
-      throw new Error('API service is not configured. Missing API key.');
-    }
-    return await analyzeSalaryFlow({ pdfContent });
+    return await analyzeSalary(pdfContent);
   } catch (error: any) {
     console.error('[generateWithRetry] Attempt failed:', error);
-
+    
     if (retries > 0) {
-      console.log(`[generateWithRetry] Retrying... ${retries} attempts remaining`);
+      console.log(`[generateWithRetry] Retrying... (${retries} attempts left)`);
       await sleep(1000);
       return generateWithRetry(pdfContent, retries - 1);
     }
-
-    throw error;
+    
+    // If all retries fail, return an error response
+    return {
+      currentSalary: 0,
+      marketRate: 0,
+      percentageDifference: 0,
+      experienceLevel: 'Junior',
+      marketDemand: 'Medium',
+      recommendations: [],
+      skills: [],
+      jobTitles: [],
+      industries: [],
+      yearsOfExperience: 0,
+      educationLevel: '',
+      location: '',
+      currency: 'SEK',
+      salaryTimeframe: 'monthly',
+      error: error.message || 'Failed to analyze salary after multiple attempts'
+    };
   }
 }
 
