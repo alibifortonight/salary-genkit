@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { genkit, z } from 'genkit/beta';
 import { gemini20Flash, googleAI } from '@genkit-ai/googleai';
 import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
-import path from 'path';
 
 // Enable Firebase telemetry
 console.log('[Startup] Enabling Firebase telemetry...');
@@ -56,10 +55,15 @@ if (typeof window === 'undefined') {
         model: gemini20Flash,
       });
       console.log('[Startup] Genkit instance created successfully');
-      console.log('[Startup] Genkit instance details:', ai);
     } catch (error) {
       console.error('[Startup] Error creating Genkit instance:', error);
-      console.error('[Startup] Error stack:', error.stack);
+      // Safely log the error details
+      const err = error as Error;
+      console.error('[Startup] Error details:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+      });
     }
   } else {
     console.error('[Startup] GOOGLE_API_KEY environment variable is not set');
@@ -164,6 +168,13 @@ const formatResponse = (output: SalaryAnalysis) => {
     };
   } catch (error) {
     console.error('[formatResponse] Error formatting response:', error);
+    // Safely log the error details
+    const err = error as Error;
+    console.error('[formatResponse] Error details:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
     return { error: 'Error formatting the analysis results' };
   }
 };
@@ -217,6 +228,13 @@ export async function POST(req: Request) {
       status: error.status,
       message: error.message,
       traceId: error.traceId
+    });
+    // Safely log the error details
+    const err = error as Error;
+    console.error('[POST] Error details:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
     });
     
     const statusCode = error.status || 500;
