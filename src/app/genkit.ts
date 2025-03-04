@@ -39,7 +39,16 @@ function getClient() {
   
   console.log('[getClient] GOOGLE_API_KEY present:', !!apiKey);
   console.log('[getClient] GOOGLE_PROJECT_ID:', projectId);
+  console.log('[getClient] NODE_ENV:', process.env.NODE_ENV);
   console.log('[getClient] Environment variables:', Object.keys(process.env).filter(key => !key.includes('SECRET')).join(', '));
+  
+  // Check if running in Google Cloud environment
+  const isGoogleCloud = process.env.K_SERVICE || process.env.GOOGLE_CLOUD_PROJECT;
+  console.log('[getClient] Running in Google Cloud:', !!isGoogleCloud);
+  if (isGoogleCloud) {
+    console.log('[getClient] K_SERVICE:', process.env.K_SERVICE);
+    console.log('[getClient] GOOGLE_CLOUD_PROJECT:', process.env.GOOGLE_CLOUD_PROJECT);
+  }
 
   if (!apiKey) {
     console.error('[getClient] ERROR: GOOGLE_API_KEY environment variable is not set');

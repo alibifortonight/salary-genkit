@@ -100,12 +100,64 @@ async function generateWithRetry(pdfContent: string, retries = 3): Promise<Salar
 }
 
 /**
+ * Helper function to check if the secret is accessible
+ */
+async function checkSecretAccess() {
+  try {
+    console.log('[checkSecretAccess] Attempting to check secret access...');
+    
+    // Only attempt this in production environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[checkSecretAccess] Not in production, skipping check');
+      return false;
+    }
+    
+    // Check if the Firebase CLI is available
+    const { exec } = require('child_process');
+    const command = 'firebase apphosting:secrets:list --json';
+    
+    return new Promise<boolean>((resolve) => {
+      exec(command, (error: any, stdout: string, stderr: string) => {
+        if (error) {
+          console.error('[checkSecretAccess] Error executing command:', error);
+          console.error('[checkSecretAccess] stderr:', stderr);
+          resolve(false);
+          return;
+        }
+        
+        try {
+          const result = JSON.parse(stdout);
+          console.log('[checkSecretAccess] Secrets list:', JSON.stringify(result, null, 2));
+          
+          // Check if our secret is in the list
+          const hasSecret = result.some((secret: any) => 
+            secret.name === 'salary_genkit_google_api_key');
+          
+          console.log('[checkSecretAccess] Has salary_genkit_google_api_key:', hasSecret);
+          resolve(hasSecret);
+        } catch (parseError) {
+          console.error('[checkSecretAccess] Error parsing command output:', parseError);
+          console.log('[checkSecretAccess] Command output:', stdout);
+          resolve(false);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('[checkSecretAccess] Error checking secret access:', error);
+    return false;
+  }
+}
+
+/**
  * POST endpoint for resume analysis
  */
 export async function POST(request: NextRequest) {
   console.log('[POST] Starting request processing...');
   
   try {
+    // Check if we can access the secret
+    await checkSecretAccess();
+    
     const formData = await request.formData();
     const file = formData.get('file') as File;
     
