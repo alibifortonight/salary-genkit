@@ -53,7 +53,9 @@ function getClient() {
   return clientInstance;
 }
 
-const ANALYSIS_PROMPT = `Analyze this resume for the Swedish job market and provide monthly salary insights. Return ONLY a JSON object without any markdown formatting or additional text. The response must match this exact format:
+const ANALYSIS_PROMPT = `Analyze this resume for the Swedish job market and provide monthly salary insights. 
+
+IMPORTANT: You MUST return ONLY a valid JSON object without any markdown formatting, code blocks, or additional text. The response must match this exact format:
 
 {
   "currentSalary": number,
@@ -77,7 +79,11 @@ Base your analysis on:
 2. Skills and qualifications
 3. Job responsibilities
 4. Industry standards
-5. Location within Sweden`;
+5. Location within Sweden
+
+If the resume doesn't specify a current salary, estimate one based on the experience level and skills.
+For currency, use "SEK" and for salaryTimeframe, use "monthly".
+Make sure percentageDifference is calculated as ((currentSalary - marketRate) / marketRate) * 100.`;
 
 // Define a function that will be called at runtime to analyze the salary
 export async function analyzeSalary(pdfContent: string): Promise<SalaryAnalysis> {
@@ -98,7 +104,34 @@ export async function analyzeSalary(pdfContent: string): Promise<SalaryAnalysis>
         { text: ANALYSIS_PROMPT }
       ]);
       
-      return JSON.parse(text);
+      console.log('[analyzeSalary] Raw response from Google AI:', text);
+      
+      try {
+        const parsedData = JSON.parse(text);
+        console.log('[analyzeSalary] Parsed data:', JSON.stringify(parsedData, null, 2));
+        return parsedData;
+      } catch (error) {
+        console.error('[analyzeSalary] Error parsing JSON response:', error);
+        console.error('[analyzeSalary] Raw text that failed to parse:', text);
+        
+        // Return a default object if parsing fails
+        return {
+          currentSalary: 0,
+          marketRate: 0,
+          percentageDifference: 0,
+          experienceLevel: 'Junior',
+          marketDemand: 'Medium',
+          recommendations: ['Error parsing AI response. Please try again.'],
+          skills: [],
+          jobTitles: [],
+          industries: [],
+          yearsOfExperience: 0,
+          educationLevel: '',
+          location: '',
+          currency: 'SEK',
+          salaryTimeframe: 'monthly',
+        };
+      }
     }
   );
   
