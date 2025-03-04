@@ -27,6 +27,7 @@ appHosting:
       - variable: GOOGLE_API_KEY
         secret: salary_genkit_google_api_key
         availability:
+          - BUILD
           - RUNTIME
 
       - variable: NEXT_PHASE
