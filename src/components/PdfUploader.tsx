@@ -6,23 +6,10 @@ import { CircularProgress } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AnalysisResult from './AnalysisResult';
+import { SalaryAnalysis } from '@/app/genkit';
 
-interface SalaryAnalysisResponse {
-  estimatedSalary: number;
-  experience: {
-    level: string;
-    years: number;
-    keySkills: string[];
-  };
-  marketDemand: {
-    level: string;
-    reasons: string[];
-  };
-  location: string;
-  industry: string;
-  salaryFactors: string[];
-  considerations: string[];
-  confidenceScore: number;
+// Extend the SalaryAnalysis type to include an optional error field
+interface SalaryAnalysisWithError extends SalaryAnalysis {
   error?: string;
 }
 
@@ -30,7 +17,7 @@ export default function PdfUploader() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<SalaryAnalysisResponse | null>(null);
+  const [result, setResult] = useState<SalaryAnalysisWithError | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
