@@ -10,6 +10,7 @@ import {
   Chip,
   Box,
   Grid,
+  Alert,
 } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import WorkIcon from '@mui/icons-material/Work';
@@ -36,9 +37,43 @@ const DemandLevel = ({ level }: { level: string }) => {
 };
 
 export default function AnalysisResult({ result }: { result: SalaryAnalysis }) {
+  // Log the result for debugging
+  console.log('[AnalysisResult] Rendering with data:', JSON.stringify(result, null, 2));
+  
+  // Check if we have all required fields
+  const hasRequiredFields = 
+    result && 
+    typeof result.currentSalary === 'number' && 
+    typeof result.marketRate === 'number' &&
+    typeof result.percentageDifference === 'number';
+  
+  if (!hasRequiredFields) {
+    console.error('[AnalysisResult] Missing required fields in result:', result);
+    return (
+      <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+        <Alert severity="error">
+          The analysis could not be completed properly. Some required data is missing.
+        </Alert>
+      </Box>
+    );
+  }
+  
   // Calculate percentage difference for display
   const percentDiff = result.percentageDifference;
   const isPositive = percentDiff >= 0;
+  
+  // Provide fallbacks for optional fields
+  const skills = Array.isArray(result.skills) ? result.skills : [];
+  const jobTitles = Array.isArray(result.jobTitles) ? result.jobTitles : [];
+  const industries = Array.isArray(result.industries) ? result.industries : [];
+  const recommendations = Array.isArray(result.recommendations) ? result.recommendations : [];
+  const currency = result.currency || 'SEK';
+  const salaryTimeframe = result.salaryTimeframe || 'monthly';
+  const experienceLevel = result.experienceLevel || 'Junior';
+  const yearsOfExperience = typeof result.yearsOfExperience === 'number' ? result.yearsOfExperience : 0;
+  const marketDemand = result.marketDemand || 'Medium';
+  const location = result.location || 'Sweden';
+  const educationLevel = result.educationLevel || '';
   
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
@@ -48,13 +83,13 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysis }) {
             <Grid item xs={12} md={6}>
               <Typography variant="h6">Current Salary</Typography>
               <Typography variant="h4" component="h2" gutterBottom>
-                {result.currentSalary.toLocaleString('sv-SE')} {result.currency}/{result.salaryTimeframe}
+                {result.currentSalary.toLocaleString('sv-SE')} {currency}/{salaryTimeframe}
               </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
               <Typography variant="h6">Market Rate</Typography>
               <Typography variant="h4" component="h2" gutterBottom>
-                {result.marketRate.toLocaleString('sv-SE')} {result.currency}/{result.salaryTimeframe}
+                {result.marketRate.toLocaleString('sv-SE')} {currency}/{salaryTimeframe}
               </Typography>
             </Grid>
           </Grid>
@@ -74,10 +109,10 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysis }) {
             Experience
           </Typography>
           <Typography variant="body1" paragraph>
-            {result.experienceLevel} ({result.yearsOfExperience} years)
+            {experienceLevel} ({yearsOfExperience} years)
           </Typography>
           <Box sx={{ mb: 2 }}>
-            {result.skills.map((skill, index) => (
+            {skills.map((skill, index) => (
               <Chip
                 key={index}
                 label={skill}
@@ -94,51 +129,61 @@ export default function AnalysisResult({ result }: { result: SalaryAnalysis }) {
             Market Analysis
           </Typography>
           <Box sx={{ mb: 2 }}>
-            <DemandLevel level={result.marketDemand} />
+            <DemandLevel level={marketDemand} />
           </Box>
 
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1" sx={{ mb: 1 }}>
               <LocationOnIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {result.location}
+              {location}
             </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              <SchoolIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {result.educationLevel}
-            </Typography>
-            <Typography variant="body1">
-              <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {result.industries.join(', ')}
-            </Typography>
+            {educationLevel && (
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                <SchoolIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                {educationLevel}
+              </Typography>
+            )}
+            {industries.length > 0 && (
+              <Typography variant="body1">
+                <BusinessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                {industries.join(', ')}
+              </Typography>
+            )}
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          {jobTitles.length > 0 && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Potential Job Titles
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                {jobTitles.map((title, index) => (
+                  <Chip
+                    key={index}
+                    label={title}
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                ))}
+              </Box>
+            </>
+          )}
 
-          <Typography variant="h6" gutterBottom>
-            Potential Job Titles
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            {result.jobTitles.map((title, index) => (
-              <Chip
-                key={index}
-                label={title}
-                sx={{ mr: 1, mb: 1 }}
-              />
-            ))}
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography variant="h6" gutterBottom>
-            Recommendations
-          </Typography>
-          <List dense>
-            {result.recommendations.map((recommendation, index) => (
-              <ListItem key={index}>
-                <ListItemText primary={recommendation} />
-              </ListItem>
-            ))}
-          </List>
+          {recommendations.length > 0 && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Recommendations
+              </Typography>
+              <List dense>
+                {recommendations.map((recommendation, index) => (
+                  <ListItem key={index}>
+                    <ListItemText primary={recommendation} />
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
         </CardContent>
       </Card>
     </Box>
