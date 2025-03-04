@@ -34,8 +34,3 @@ appHosting:
         secret: salary_genkit_google_api_key
         availability:
           - RUNTIME
-
-      - variable: FIREBASE_API_KEY
-        secret: firebaseApiKey
-        availability:
-          - RUNTIME
