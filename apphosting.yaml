@@ -3,7 +3,7 @@ appHosting:
   # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
   run:
     serviceId: salary-genkit
-    region: us-central1
+    region: europe-west4
     runConfig:
       cpu: 1
       memoryMiB: 1024
