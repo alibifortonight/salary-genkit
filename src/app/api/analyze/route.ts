@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeSalary } from '@/app/genkit';
 import { SalaryAnalysis } from '@/app/genkit';
 import { ErrorResponse } from '@/types/api';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 export interface SalaryAnalysisResponse extends SalaryAnalysis {
   error?: string;
@@ -34,7 +36,9 @@ async function fileToDataUrl(file: File): Promise<string> {
 /**
  * Sleep for a specified number of milliseconds
  */
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /**
  * Attempts to generate an analysis with retries
@@ -113,13 +117,12 @@ async function checkSecretAccess() {
     }
     
     // Check if the Firebase CLI is available
-    const { exec } = require('child_process');
+    const execPromise = promisify(exec);
     const command = 'firebase apphosting:secrets:list --json';
     
     return new Promise<boolean>((resolve) => {
-      exec(command, (error: any, stdout: string, stderr: string) => {
-        if (error) {
-          console.error('[checkSecretAccess] Error executing command:', error);
+      execPromise(command).then(({ stdout, stderr }) => {
+        if (stderr) {
           console.error('[checkSecretAccess] stderr:', stderr);
           resolve(false);
           return;
@@ -140,6 +143,9 @@ async function checkSecretAccess() {
           console.log('[checkSecretAccess] Command output:', stdout);
           resolve(false);
         }
+      }).catch((error) => {
+        console.error('[checkSecretAccess] Error executing command:', error);
+        resolve(false);
       });
     });
   } catch (error) {
