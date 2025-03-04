@@ -13,10 +13,10 @@ if (!apiKey) {
   throw new Error('[Startup] GOOGLE_API_KEY environment variable is not set');
 }
 
+// Note: We're not passing projectId to googleAI() as it's not supported in the type definition
 const ai = genkit({
   plugins: [googleAI({ 
-    apiKey,
-    projectId
+    apiKey
   })],
   model: gemini20Flash,
 });
