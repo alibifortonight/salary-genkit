@@ -39,18 +39,35 @@ function getClient() {
   
   console.log('[getClient] GOOGLE_API_KEY present:', !!apiKey);
   console.log('[getClient] GOOGLE_PROJECT_ID:', projectId);
+  console.log('[getClient] Environment variables:', Object.keys(process.env).filter(key => !key.includes('SECRET')).join(', '));
 
   if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY environment variable is not set');
+    console.error('[getClient] ERROR: GOOGLE_API_KEY environment variable is not set');
+    console.error('[getClient] This is required for the Genkit client to function properly');
+    console.error('[getClient] Please check that the secret is properly configured in the Google Cloud Secret Manager');
+    console.error('[getClient] and that it is correctly referenced in apphosting.yaml');
+    
+    // In production, we'll throw an error that will be caught by the error handler
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('API service is not properly configured. Please contact support.');
+    } else {
+      throw new Error('GOOGLE_API_KEY environment variable is not set');
+    }
   }
 
-  // Initialize the client only when needed
-  clientInstance = genkit({
-    plugins: [googleAI({ apiKey })],
-    model: gemini20Flash,
-  });
-
-  return clientInstance;
+  try {
+    // Initialize the client only when needed
+    clientInstance = genkit({
+      plugins: [googleAI({ apiKey })],
+      model: gemini20Flash,
+    });
+    
+    console.log('[getClient] Successfully initialized Genkit client');
+    return clientInstance;
+  } catch (error) {
+    console.error('[getClient] Error initializing Genkit client:', error);
+    throw error;
+  }
 }
 
 const ANALYSIS_PROMPT = `Analyze this resume for the Swedish job market and provide monthly salary insights. 

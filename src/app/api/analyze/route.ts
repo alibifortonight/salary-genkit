@@ -48,6 +48,28 @@ async function generateWithRetry(pdfContent: string, retries = 3): Promise<Salar
   } catch (error: any) {
     console.error('[generateWithRetry] Attempt failed:', error);
     
+    // Check if this is a configuration error
+    if (error.message && error.message.includes('not properly configured')) {
+      console.error('[generateWithRetry] Configuration error detected. Not retrying.');
+      return {
+        currentSalary: 0,
+        marketRate: 0,
+        percentageDifference: 0,
+        experienceLevel: 'Junior',
+        marketDemand: 'Medium',
+        recommendations: ['The salary analysis service is currently unavailable due to a configuration issue. Our team has been notified.'],
+        skills: [],
+        jobTitles: [],
+        industries: [],
+        yearsOfExperience: 0,
+        educationLevel: '',
+        location: '',
+        currency: 'SEK',
+        salaryTimeframe: 'monthly',
+        error: 'Service configuration error'
+      };
+    }
+    
     if (retries > 0) {
       console.log(`[generateWithRetry] Retrying... (${retries} attempts left)`);
       await sleep(1000);
