@@ -41,7 +41,10 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 async function generateWithRetry(pdfContent: string, retries = 3): Promise<SalaryAnalysisResponse> {
   try {
-    return await analyzeSalary(pdfContent);
+    console.log('[generateWithRetry] Attempting to analyze salary...');
+    const result = await analyzeSalary(pdfContent);
+    console.log('[generateWithRetry] Analysis successful:', JSON.stringify(result, null, 2));
+    return result;
   } catch (error: any) {
     console.error('[generateWithRetry] Attempt failed:', error);
     
@@ -51,6 +54,8 @@ async function generateWithRetry(pdfContent: string, retries = 3): Promise<Salar
       return generateWithRetry(pdfContent, retries - 1);
     }
     
+    console.error('[generateWithRetry] All retries failed. Returning default response with error.');
+    
     // If all retries fail, return an error response
     return {
       currentSalary: 0,
@@ -58,7 +63,7 @@ async function generateWithRetry(pdfContent: string, retries = 3): Promise<Salar
       percentageDifference: 0,
       experienceLevel: 'Junior',
       marketDemand: 'Medium',
-      recommendations: [],
+      recommendations: ['Failed to analyze your resume. Please try again later.'],
       skills: [],
       jobTitles: [],
       industries: [],

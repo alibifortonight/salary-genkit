@@ -46,8 +46,19 @@ export default function PdfUploader() {
       }
 
       const data = await response.json();
+      console.log('[PdfUploader] API response data:', JSON.stringify(data, null, 2));
+      
+      // Validate that the required fields are present
+      if (!data.currentSalary && data.currentSalary !== 0) {
+        console.error('[PdfUploader] Missing currentSalary in response');
+      }
+      if (!data.marketRate && data.marketRate !== 0) {
+        console.error('[PdfUploader] Missing marketRate in response');
+      }
+      
       setResult(data);
     } catch (err) {
+      console.error('[PdfUploader] Error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
