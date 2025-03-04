@@ -46,6 +46,7 @@ let ai: any = null;
 if (typeof window === 'undefined') {
   console.log('[Startup] Running server-side initialization...');
   const apiKey = process.env.GOOGLE_API_KEY;
+  console.log('[Startup] GOOGLE_API_KEY present:', !!apiKey);
   
   if (apiKey) {
     console.log('[Startup] Creating Genkit instance...');
@@ -55,12 +56,16 @@ if (typeof window === 'undefined') {
         model: gemini20Flash,
       });
       console.log('[Startup] Genkit instance created successfully');
+      console.log('[Startup] Genkit instance details:', ai);
     } catch (error) {
       console.error('[Startup] Error creating Genkit instance:', error);
+      console.error('[Startup] Error stack:', error.stack);
     }
   } else {
     console.error('[Startup] GOOGLE_API_KEY environment variable is not set');
   }
+} else {
+  console.log('[Startup] Skipping server-side initialization (running in browser)');
 }
 
 /**
