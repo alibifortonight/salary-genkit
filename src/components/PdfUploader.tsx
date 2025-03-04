@@ -8,27 +8,21 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AnalysisResult from './AnalysisResult';
 
 interface SalaryAnalysisResponse {
-  salary: {
-    amount: string;
-    currency: string;
-    period: string;
-  };
+  estimatedSalary: number;
   experience: {
     level: string;
     years: number;
-    skills: string[];
+    keySkills: string[];
   };
-  market: {
-    demand: string;
+  marketDemand: {
+    level: string;
     reasons: string[];
-    location: string;
-    industry: string;
   };
-  analysis: {
-    factors: string[];
-    considerations: string[];
-    confidence: number;
-  };
+  location: string;
+  industry: string;
+  salaryFactors: string[];
+  considerations: string[];
+  confidenceScore: number;
   error?: string;
 }
 
