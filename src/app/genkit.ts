@@ -133,8 +133,40 @@ export async function analyzeSalary(pdfContent: string): Promise<SalaryAnalysis>
       console.log('[analyzeSalary] Raw response from Google AI:', text);
       
       try {
-        const parsedData = JSON.parse(text);
+        // First, try to clean up the response if it contains markdown code blocks
+        let cleanedText = text;
+        
+        // Remove markdown code block markers if present
+        if (text.includes('```json')) {
+          cleanedText = text.replace(/```json\n|\n```/g, '');
+        } else if (text.includes('```')) {
+          cleanedText = text.replace(/```\n|\n```/g, '');
+        }
+        
+        // Trim whitespace
+        cleanedText = cleanedText.trim();
+        
+        console.log('[analyzeSalary] Cleaned text for parsing:', cleanedText);
+        
+        // Try to parse the JSON
+        const parsedData = JSON.parse(cleanedText);
         console.log('[analyzeSalary] Parsed data:', JSON.stringify(parsedData, null, 2));
+        
+        // Validate that all required fields are present
+        const requiredFields = [
+          'currentSalary', 'marketRate', 'percentageDifference', 
+          'experienceLevel', 'marketDemand', 'recommendations'
+        ];
+        
+        const missingFields = requiredFields.filter(field => 
+          parsedData[field] === undefined || parsedData[field] === null
+        );
+        
+        if (missingFields.length > 0) {
+          console.error('[analyzeSalary] Missing required fields:', missingFields);
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+        
         return parsedData;
       } catch (error) {
         console.error('[analyzeSalary] Error parsing JSON response:', error);
