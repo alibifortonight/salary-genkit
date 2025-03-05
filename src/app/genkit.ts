@@ -34,10 +34,10 @@ function getClient() {
     return clientInstance;
   }
 
-  const apiKey = process.env.GOOGLE_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   const projectId = process.env.GOOGLE_PROJECT_ID || 'salary-genkit';
   
-  console.log('[getClient] GOOGLE_API_KEY present:', !!apiKey);
+  console.log('[getClient] GEMINI_API_KEY present:', !!apiKey);
   console.log('[getClient] GOOGLE_PROJECT_ID:', projectId);
   console.log('[getClient] NODE_ENV:', process.env.NODE_ENV);
   console.log('[getClient] Environment variables:', Object.keys(process.env).filter(key => !key.includes('SECRET')).join(', '));
@@ -51,7 +51,7 @@ function getClient() {
   }
 
   if (!apiKey) {
-    console.error('[getClient] ERROR: GOOGLE_API_KEY environment variable is not set');
+    console.error('[getClient] ERROR: GEMINI_API_KEY environment variable is not set');
     console.error('[getClient] This is required for the Genkit client to function properly');
     console.error('[getClient] Please check that the secret is properly configured in the Google Cloud Secret Manager');
     console.error('[getClient] and that it is correctly referenced in apphosting.yaml');
@@ -60,7 +60,7 @@ function getClient() {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('API service is not properly configured. Please contact support.');
     } else {
-      throw new Error('GOOGLE_API_KEY environment variable is not set');
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
   }
 

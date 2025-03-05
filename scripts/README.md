@@ -18,9 +18,9 @@ The application requires a Google API Key to function properly. This key is used
    firebase login
    ```
 
-3. Set the GOOGLE_API_KEY environment variable:
+3. Set the GEMINI_API_KEY environment variable:
    ```bash
-   export GOOGLE_API_KEY="your-google-api-key"
+   export GEMINI_API_KEY="your-google-api-key"
    ```
 
 4. Run the set-secrets.sh script:
@@ -70,7 +70,7 @@ If you encounter any issues with the API key not being available in the deployed
 
 2. Verify that the apphosting.yaml file references the correct secret name:
    ```yaml
-   - variable: GOOGLE_API_KEY
+   - variable: GEMINI_API_KEY
      secret: salary_genkit_google_api_key
      availability:
        - BUILD

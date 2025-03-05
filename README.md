@@ -30,7 +30,8 @@ A Next.js application that analyzes resumes using Genkit AI to provide salary es
 Create a `.env.local` file in the root directory with:
 
 ```env
-GOOGLE_API_KEY=your_google_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_PROJECT_ID=your_google_project_id_here
 ```
 
 ## Installation
